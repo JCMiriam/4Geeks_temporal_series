@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from statsmodels.tsa.seasonal import seasonal_decompose
 from statsmodels.tsa.stattools import adfuller
 from statsmodels.graphics.tsaplots import plot_acf
@@ -11,7 +11,6 @@ from statsmodels.graphics.tsaplots import plot_acf
 def get_null_percentage_per_column(df):
     null_percentages = (df.isnull().sum() / len(df)) * 100
     return null_percentages.sort_values(ascending=False)
-
 
 def turn_column_into_date(df, column):
     df[column] = pd.to_datetime(df[column], format='%d/%m/%Y')
@@ -28,7 +27,7 @@ def interpolate_df(df):
 
 
 def normalize_dataframe(df):
-    scaler = MinMaxScaler()
+    scaler = StandardScaler()
     df[df.select_dtypes(include=['number']).columns] = scaler.fit_transform(df.select_dtypes(include=['number']))
     return df
 
@@ -38,6 +37,16 @@ def remove_columns_with_nulls_percent(df, threshold):
     columns_to_drop = null_percentage[null_percentage > threshold].index
     df_cleaned = df.drop(columns=columns_to_drop)
     return df_cleaned
+
+
+def combine_columns_mean(df, columns, new_column):
+    missing_columns = [col for col in columns if col not in df.columns]
+    if missing_columns:
+        raise ValueError(f"Missing columns: {missing_columns}")
+
+    df[new_column] = df[columns].mean(axis=1)
+
+    return df
 
 
 # Graphic functions
